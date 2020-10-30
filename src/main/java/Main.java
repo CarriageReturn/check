@@ -4,6 +4,7 @@ import org.apache.commons.mail.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Main {
 
@@ -24,28 +25,10 @@ public class Main {
             if (!result.isEmpty()) {
 
                 final StringBuffer sb = new StringBuffer();
-
                 result.stream().forEach(r -> sb.append(r.toString() + "\n"));
 
-                final  MultiPartEmail email = new MultiPartEmail();
-                email.setHostName("mail.gmx.net");
-                email.setSmtpPort(587);
-                email.setAuthenticator(new DefaultAuthenticator("alex.gempp@gmx.de", "Drei5und40"));
-                email.setSSLOnConnect(true);
-                email.setFrom("alex.gempp@gmx.de");
-                email.setSubject("Die Ergebnisse sind da");
-                email.setMsg(sb.toString());
-                email.addTo("alexander.gempp@gmail.com");
-
-                result.forEach(r -> {
-                    try {
-                        email.attach(r.getScreenshot());
-                    } catch (EmailException e) {
-                        e.printStackTrace();
-                    }
-                });
-
-                email.send();
+                final List<File> files = result.stream().map(r -> r.getScreenshot()).collect(Collectors.toList());
+                new Mailer().createAndSendMail(sb.toString(), files);
 
                 System.out.println(String.format("Checked %d persons. Retrieved %d results.", persons.length, result.size()));
             }
@@ -58,5 +41,4 @@ public class Main {
         final ObjectMapper objectMapper = new ObjectMapper();
         return objectMapper.readValue(new File("persons.json"), Person[].class);
     }
-
 }
